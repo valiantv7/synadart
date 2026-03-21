@@ -3,5 +3,6 @@
 library synadart;
 
 export 'src/layers/layer.dart';
+export 'src/layers/core/dense.dart';
 export 'src/activation.dart';
 export 'src/networks/sequential.dart';

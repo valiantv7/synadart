@@ -28,9 +28,11 @@ class Neuron {
 
   /// The sensitivity of this `Neuron` to the function adjusting [weights]
   /// during training.
-  ///
-  ///
   final double learningRate;
+
+  /// The maximum value that the weight margin can take during training.
+  /// If set to 0, no clipping will be performed.
+  double gradientClipping;
 
   /// The weights of connections to the precedent `Neurons`, which can be
   /// imagined as how influential each `Neuron` in the preceding layer is on
@@ -66,14 +68,14 @@ class Neuron {
   /// [learningRate] - A value between 0 (exclusive) and 1 (inclusive) that
   /// indicates how sensitive this `Neuron` is to [weights] adjustments.
   ///
-  /// [weights] - (Optional) Weights of connections to `Neuron`s in the previous
-  /// `Layer`.  If the [weights] aren't provided, they will be generated
-  /// randomly.
+  /// [gradientClipping] - (Optional) The maximum value that the weight margin
+  /// can take during training.
   Neuron({
     required this.activationAlgorithm,
     required int parentLayerSize,
     required this.learningRate,
     List<double> weights = const [],
+    this.gradientClipping = 0,
   }) {
     activation = resolveActivationAlgorithm(activationAlgorithm);
     activationPrime = resolveActivationDerivative(activationAlgorithm);
@@ -133,6 +135,14 @@ class Neuron {
 
   /// Adjusts this `Neuron`'s [weights] and returns their adjusted values.
   List<double> adjust({required double weightMargin}) {
+    if (gradientClipping > 0) {
+      if (weightMargin > gradientClipping) {
+        weightMargin = gradientClipping;
+      } else if (weightMargin < -gradientClipping) {
+        weightMargin = -gradientClipping;
+      }
+    }
+
     final adjustedWeights = <double>[];
 
     for (var index = 0; index < weights.length; index++) {
@@ -150,8 +160,7 @@ class Neuron {
   /// because it has no parent neurons and therefore has no weights.  Otherwise,
   /// it will output the weighted sum of the [inputs] and [weights], passed
   /// through the activation function.
-  double get output =>
-      weights.isEmpty ? inputs.first : activation(() => dot(inputs, weights));
+  double get output => weights.isEmpty ? inputs.first : activation(() => dot(inputs, weights));
 
   /// Create a `Neuron` from the it's JSON Model
   factory Neuron.fromJson(Map<String, dynamic> json) {

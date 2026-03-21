@@ -23,13 +23,24 @@ class Network {
   /// weights.
   double learningRate;
 
+  /// The maximum value that the weight margin can take during training.
+  /// If set to 0, no clipping will be performed.
+  double gradientClipping;
+
   /// Creates a `Network` with optional `Layers`.
   ///
   /// [learningRate] - The level of aggressiveness at which this `Network` will
   /// adjust its `Neurons`' weights during training.
   ///
   /// [layers] - (Optional) The `Layers` of this `Network`.
-  Network({required this.learningRate, List<Layer>? layers}) {
+  ///
+  /// [gradientClipping] - (Optional) The maximum value that the weight margin
+  /// can take during training.
+  Network({
+    required this.learningRate,
+    List<Layer>? layers,
+    this.gradientClipping = 0,
+  }) {
     if (layers != null) {
       addLayers(layers);
     }
@@ -53,6 +64,7 @@ class Network {
     layer.initialise(
       parentLayerSize: layers.isEmpty ? 0 : layers.last.size,
       learningRate: learningRate,
+      gradientClipping: gradientClipping,
     );
 
     layers.add(layer);

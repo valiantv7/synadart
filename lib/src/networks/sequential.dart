@@ -10,9 +10,18 @@ class Sequential extends Network with Backpropagation {
   final String _learningRateField = 'learningRate';
 
   /// Creates a `Sequential` model network.
+  ///
+  /// [learningRate] - The level of aggressiveness at which this `Network` will
+  /// adjust its `Neurons`' weights during training.
+  ///
+  /// [layers] - (Optional) The `Layers` of this `Network`.
+  ///
+  /// [gradientClipping] - (Optional) The maximum value that the weight margin
+  /// can take during training.
   Sequential({
     required super.learningRate,
     super.layers,
+    super.gradientClipping,
   });
 
   /// Loads a model from a JSON .

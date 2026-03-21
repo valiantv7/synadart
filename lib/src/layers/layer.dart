@@ -64,9 +64,13 @@ class Layer {
   /// [learningRate] - A value between 0 (exclusive) and 1 (inclusive),
   /// indicating how sensitive the `Neurons` within this `Layer` are to
   /// adjustments of their weights.
+  ///
+  /// [gradientClipping] - The maximum value that the weight margin can take
+  /// during training.
   void initialise({
     required int parentLayerSize,
     required double learningRate,
+    double gradientClipping = 0,
   }) {
     isInput = parentLayerSize == 0;
 
@@ -77,6 +81,7 @@ class Layer {
           activationAlgorithm: activation,
           parentLayerSize: parentLayerSize,
           learningRate: learningRate,
+          gradientClipping: gradientClipping,
         ),
       ),
     );
@@ -108,23 +113,18 @@ class Layer {
     final newWeightMargins = <List<double>>[];
 
     for (final neuron in neurons) {
-      newWeightMargins
-          .add(neuron.adjust(weightMargin: weightMargins.removeAt(0)));
+      newWeightMargins.add(neuron.adjust(weightMargin: weightMargins.removeAt(0)));
     }
 
     return newWeightMargins.reduce(add);
   }
 
   /// Returns a list of this `Layer`'s `Neuron`s' outputs
-  List<double> get output =>
-      List<double>.from(neurons.map<double>((neuron) => neuron.output));
+  List<double> get output => List<double>.from(neurons.map<double>((neuron) => neuron.output));
 
   factory Layer.fromJson(Map<String, dynamic> json) {
-    final activation =
-        ActivationAlgorithm.values[json[_activationField] as int];
-    final neurons = (json[_neuronsField] as List)
-        .map((e) => Neuron.fromJson((e as Map).cast()))
-        .toList();
+    final activation = ActivationAlgorithm.values[json[_activationField] as int];
+    final neurons = (json[_neuronsField] as List).map((e) => Neuron.fromJson((e as Map).cast())).toList();
     final isInput = json[_isInputField];
 
     return Layer(
@@ -144,9 +144,7 @@ class Layer {
 
   Layer variation({Mutation? mutation}) {
     return copyWith(
-      neurons: neurons
-          .map((e) => e.variation(mutation:mutation))
-          .toList(),
+      neurons: neurons.map((e) => e.variation(mutation: mutation)).toList(),
     );
   }
 
