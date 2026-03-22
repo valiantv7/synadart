@@ -21,6 +21,7 @@ const algorithms = <ActivationAlgorithm, List<ActivationFunctionSignature>>{
   ActivationAlgorithm.softsign: [softsign, softsignPrime],
   ActivationAlgorithm.swish: [swish, swishPrime],
   ActivationAlgorithm.gaussian: [gaussian, gaussianPrime],
+  ActivationAlgorithm.softmax: [softmax, softmaxPrime],
 };
 
 /// Resolves an `ActivationAlgorithm` to a mathematical function in the form of
@@ -52,8 +53,7 @@ double lrelu(double x) => max(0.01 * x, x);
 
 /// Exponential Linear Unit - Provides a smooth descent below 0, towards the
 /// negative of [hyperparameter], or returns [x] if above or equal to 0.
-double elu(double x, [double hyperparameter = 1]) =>
-    x >= 0 ? x : hyperparameter * (exp(x) - 1);
+double elu(double x, [double hyperparameter = 1]) => x >= 0 ? x : hyperparameter * (exp(x) - 1);
 
 /// Scaled Exponential Linear Unit - Ensures a slope larger than one for
 /// positive inputs.
@@ -81,6 +81,17 @@ double swish(double x) => x * sigmoid(x);
 /// 0 for both sides of the x-axis.
 double gaussian(double x) => exp(-pow(x, 2));
 
+/// Softmax activation function.
+///
+/// Converts a vector of values into a probability distribution.
+/// Each element of the output vector is in the range (0, 1), and the sum of
+/// the elements is 1.
+///
+/// NOTE: This function is intended to be used at the layer level, as it
+/// requires knowledge of the other values in the layer to calculate the
+/// denominator. When used at the neuron level, it returns exp(x).
+double softmax(double x) => exp(x);
+
 /// The derivative of the Sigmoid.
 double sigmoidPrime(double x) => sigmoid(x) * (1 - sigmoid(x));
 
@@ -91,8 +102,7 @@ double reluPrime(double x) => x < 0 ? 0 : 1;
 double lreluPrime(double x) => x < 0 ? 0.01 : 1;
 
 /// The derivative of ELU.
-double eluPrime(double x, [double hyperparameter = 1]) =>
-    x > 0 ? 1 : elu(x, hyperparameter) + hyperparameter;
+double eluPrime(double x, [double hyperparameter = 1]) => x > 0 ? 1 : elu(x, hyperparameter) + hyperparameter;
 
 /// The derivative of the Scaled Exponential Linear Unit
 double seluPrime(double x) => 1.0507 * (x < 0 ? 1.67326 * exp(x) : 1);
@@ -111,6 +121,16 @@ double swishPrime(double x) => swish(x) + sigmoid(x) * (1 - swish(x));
 
 /// The derivative of the Gaussian
 double gaussianPrime(double x) => -2 * x * gaussian(x);
+
+/// The derivative of the Softmax
+///
+/// This is a simplified version of the Softmax derivative, which is
+/// typically used in conjunction with the Cross-Entropy loss function.
+/// When used in this context, the derivative of the loss with respect to
+/// the input to the Softmax function is simply (observed - expected).
+///
+/// NOTE: At the neuron level, this returns exp(x).
+double softmaxPrime(double x) => exp(x);
 
 /// Algorithms which can be used for activating `Neuron`s
 enum ActivationAlgorithm {
@@ -143,4 +163,7 @@ enum ActivationAlgorithm {
 
   /// Gaussian
   gaussian,
+
+  /// Softmax
+  softmax,
 }

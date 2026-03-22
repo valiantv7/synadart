@@ -120,7 +120,16 @@ class Layer {
   }
 
   /// Returns a list of this `Layer`'s `Neuron`s' outputs
-  List<double> get output => List<double>.from(neurons.map<double>((neuron) => neuron.output));
+  List<double> get output {
+    final rawOutputs = neurons.map<double>((neuron) => neuron.output).toList();
+
+    if (activation == ActivationAlgorithm.softmax) {
+      final total = rawOutputs.reduce((a, b) => a + b);
+      return rawOutputs.map((e) => e / total).toList();
+    }
+
+    return rawOutputs;
+  }
 
   factory Layer.fromJson(Map<String, dynamic> json) {
     final activation = ActivationAlgorithm.values[json[_activationField] as int];
