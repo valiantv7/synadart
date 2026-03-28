@@ -53,6 +53,7 @@ class Neuron {
   static const _weightsField = 'weights';
   static const _activationField = 'activation';
   static const _learningRateField = 'learningRate';
+  static const _gradientClippingField = 'gradientClipping';
 
   /// Creates a `Neuron` with the specified `ActivationAlgorithm`, which is then
   /// resolved to an `ActivationFunction`.
@@ -166,12 +167,13 @@ class Neuron {
   factory Neuron.fromJson(Map<String, dynamic> json) {
     final activationIndex = json[_activationField] as int;
     final weights = List<double>.from(json[_weightsField] as List);
+    final gradientClipping = json[_gradientClippingField] as double?;
     return Neuron(
-      activationAlgorithm: ActivationAlgorithm.values[activationIndex],
-      learningRate: json[_learningRateField] as double,
-      weights: weights,
-      parentLayerSize: weights.length,
-    );
+        activationAlgorithm: ActivationAlgorithm.values[activationIndex],
+        learningRate: json[_learningRateField] as double,
+        weights: weights,
+        parentLayerSize: weights.length,
+        gradientClipping: gradientClipping ?? 0);
   }
 
   /// Parse this `Neuron` to a JSON Model
@@ -179,20 +181,22 @@ class Neuron {
         _weightsField: weights,
         _activationField: activationAlgorithm.index,
         _learningRateField: learningRate,
+        _gradientClippingField: gradientClipping ?? 0
       };
 
-  Neuron copyWith({
-    ActivationFunction? activation,
-    ActivationFunction? activationPrime,
-    ActivationAlgorithm? activationAlgorithm,
-    double? learningRate,
-    List<double>? weights,
-  }) {
+  Neuron copyWith(
+      {ActivationFunction? activation,
+      ActivationFunction? activationPrime,
+      ActivationAlgorithm? activationAlgorithm,
+      double? learningRate,
+      List<double>? weights,
+      double? gradientClipping}) {
     return Neuron(
       activationAlgorithm: activationAlgorithm ?? this.activationAlgorithm,
       learningRate: learningRate ?? this.learningRate,
       weights: weights ?? this.weights,
       parentLayerSize: (weights ?? this.weights).length,
+      gradientClipping: gradientClipping ?? this.gradientClipping,
     );
   }
 

@@ -8,6 +8,7 @@ import 'package:synadart/src/utils/utils.dart';
 class Sequential extends Network with Backpropagation {
   final String _layersField = 'layers';
   final String _learningRateField = 'learningRate';
+  final String _gradientClippingField = 'gradientClipping';
 
   /// Creates a `Sequential` model network.
   ///
@@ -27,6 +28,7 @@ class Sequential extends Network with Backpropagation {
   /// Loads a model from a JSON .
   Sequential.fromMap(Map<String, dynamic> data) : super(learningRate: 0) {
     learningRate = data[_learningRateField];
+    gradientClipping = data[_gradientClippingField];
     for (Map<String, dynamic> layer in data[_layersField]) {
       layers.add(Layer.fromJson(layer));
     }
@@ -37,6 +39,7 @@ class Sequential extends Network with Backpropagation {
     return {
       _layersField: layers.map((e) => e.toJson()).toList(),
       _learningRateField: learningRate,
+      _gradientClippingField: gradientClipping
     };
   }
 
