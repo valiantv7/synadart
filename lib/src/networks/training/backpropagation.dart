@@ -57,14 +57,17 @@ mixin Backpropagation on Network {
 
     // Perform backpropagation without any additional metrics overhead
     if (quiet) {
+      isTraining = true;
       for (var iteration = 0; iteration < iterations; iteration++) {
         for (var index = 0; index < inputs.length; index++) {
           propagateBackwards(inputs[index], expected[index]);
         }
       }
+      isTraining = false;
       return;
     }
 
+    isTraining = true;
     for (var iteration = 0; iteration < iterations; iteration++) {
       stopwatch.start();
 
@@ -82,5 +85,6 @@ mixin Backpropagation on Network {
 
       stopwatch.reset();
     }
+    isTraining = false;
   }
 }

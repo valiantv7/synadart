@@ -27,6 +27,9 @@ class Network {
   /// If set to 0, no clipping will be performed.
   double gradientClipping;
 
+  /// Whether or not this `Network` is currently in training mode.
+  bool isTraining = false;
+
   /// Creates a `Network` with optional `Layers`.
   ///
   /// [learningRate] - The level of aggressiveness at which this `Network` will
@@ -52,6 +55,7 @@ class Network {
     var output = inputs;
 
     for (final layer in layers) {
+      layer.isTraining = isTraining;
       layer.accept(output);
       output = layer.output;
     }

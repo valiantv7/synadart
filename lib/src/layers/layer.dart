@@ -1,5 +1,6 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:io';
+import 'dart:math';
 
 import 'package:sprint/sprint.dart';
 import 'package:synadart/src/activation.dart';
@@ -18,6 +19,7 @@ class Layer {
   static const String _activationField = 'activation';
   static const String _neuronsField = 'neurons';
   static const String _isInputField = 'isInput';
+  static const String _dropoutRateField = 'dropoutRate';
 
   /// `Sprint` instance for logging messages.
   final Sprint log = Sprint('Layer');
@@ -35,6 +37,15 @@ class Layer {
   /// to determine how inputs should be accepted by each neuron in this `Layer`.
   bool isInput = false;
 
+  /// The rate at which `Neurons` are dropped out during training.
+  double dropoutRate;
+
+  /// Whether or not this `Layer` is currently in training mode.
+  bool isTraining = false;
+
+  /// The mask used to drop out `Neurons` during training.
+  List<double>? _dropoutMask;
+
   /// Creates a `Layer` with the specified activation algorithm that is then
   /// passed to and resolved by `Neurons`.
   ///
@@ -42,13 +53,22 @@ class Layer {
   ///
   /// [activation] - The algorithm used for determining how active `Neurons` are
   /// contained within this layer.
+  ///
+  /// [dropoutRate] - The rate at which `Neurons` are dropped out during
+  /// training.
   Layer({
     required this.size,
     required this.activation,
     List<Neuron>? neurons,
+    this.dropoutRate = 0,
   }) : neurons = neurons ?? [] {
     if (size < 1) {
       log.severe('A layer must contain at least one neuron.');
+      exit(0);
+    }
+
+    if (dropoutRate < 0 || dropoutRate >= 1) {
+      log.severe('Dropout rate must be between 0 (inclusive) and 1 (exclusive).');
       exit(0);
     }
   }
@@ -110,6 +130,14 @@ class Layer {
   /// and returns the new [weightMargins] for the previous `Layer` (We are
   /// moving backwards during propagation).
   List<double> propagate(List<double> weightMargins) {
+    if (_dropoutMask != null) {
+      final scale = 1 / (1 - dropoutRate);
+      for (var i = 0; i < weightMargins.length; i++) {
+        weightMargins[i] *= _dropoutMask![i] * scale;
+      }
+      _dropoutMask = null;
+    }
+
     final newWeightMargins = <List<double>>[];
 
     for (final neuron in neurons) {
@@ -125,21 +153,43 @@ class Layer {
 
     if (activation == ActivationAlgorithm.softmax) {
       final total = rawOutputs.reduce((a, b) => a + b);
-      return rawOutputs.map((e) => e / total).toList();
+      return applyDropout(rawOutputs.map((e) => e / total).toList());
     }
 
-    return rawOutputs;
+    return applyDropout(rawOutputs);
+  }
+
+  /// Applies dropout to the [outputs] if this `Layer` is in training mode.
+  List<double> applyDropout(List<double> outputs) {
+    if (!isTraining || dropoutRate == 0) {
+      _dropoutMask = null;
+      return outputs;
+    }
+
+    final random = Random();
+    final scale = 1 / (1 - dropoutRate);
+    _dropoutMask = List.generate(
+      size,
+      (_) => random.nextDouble() > dropoutRate ? 1.0 : 0.0,
+    );
+
+    return List.generate(
+      size,
+      (index) => outputs[index] * _dropoutMask![index] * scale,
+    );
   }
 
   factory Layer.fromJson(Map<String, dynamic> json) {
     final activation = ActivationAlgorithm.values[json[_activationField] as int];
     final neurons = (json[_neuronsField] as List).map((e) => Neuron.fromJson((e as Map).cast())).toList();
     final isInput = json[_isInputField];
+    final dropoutRate = json[_dropoutRateField] as double? ?? 0;
 
     return Layer(
       size: neurons.length,
       activation: activation,
       neurons: neurons,
+      dropoutRate: dropoutRate,
     )..isInput = isInput;
   }
 
@@ -148,6 +198,7 @@ class Layer {
       _activationField: activation.index,
       _neuronsField: neurons.map((e) => e.toJson()).toList(),
       _isInputField: isInput,
+      _dropoutRateField: dropoutRate,
     };
   }
 
@@ -161,11 +212,13 @@ class Layer {
     ActivationAlgorithm? activation,
     bool? isInput,
     List<Neuron>? neurons,
+    double? dropoutRate,
   }) {
     return Layer(
       activation: activation ?? this.activation,
       size: (neurons ?? this.neurons).length,
       neurons: neurons ?? this.neurons,
+      dropoutRate: dropoutRate ?? this.dropoutRate,
     )..isInput = isInput ?? this.isInput;
   }
 }

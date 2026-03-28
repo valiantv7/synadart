@@ -25,6 +25,7 @@ class LSTM extends Layer {
     required super.size,
     required super.activation,
     required ActivationAlgorithm recurrenceActivation,
+    super.dropoutRate,
   }) : recurrenceActivation = resolveActivationAlgorithm(recurrenceActivation);
 
   /// Obtain the output by applying the recurrent memory algorithm.
@@ -39,15 +40,13 @@ class LSTM extends Layer {
       // Forget gate
       longTermMemory = hiddenActivationComponent * longTermMemory;
       // Update gate
-      longTermMemory = (hiddenActivationComponent * hiddenRecurrentComponent) +
-          longTermMemory;
+      longTermMemory = (hiddenActivationComponent * hiddenRecurrentComponent) + longTermMemory;
       // Output gate
-      final stateRecurrentComponent =
-          recurrenceActivation(() => longTermMemory);
+      final stateRecurrentComponent = recurrenceActivation(() => longTermMemory);
       shortTermMemory = hiddenActivationComponent * stateRecurrentComponent;
       output.add(shortTermMemory);
     }
 
-    return output;
+    return applyDropout(output);
   }
 }
