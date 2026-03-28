@@ -179,9 +179,12 @@ class Layer {
     );
   }
 
-  factory Layer.fromJson(Map<String, dynamic> json) {
+  factory Layer.fromJson(Map<String, dynamic> json, {required double learningRate, required double gradientClipping}) {
     final activation = ActivationAlgorithm.values[json[_activationField] as int];
-    final neurons = (json[_neuronsField] as List).map((e) => Neuron.fromJson((e as Map).cast())).toList();
+    final neurons = (json[_neuronsField] as List)
+        .map((e) => Neuron.fromJson((e as Map).cast(),
+            activation: activation, learningRate: learningRate, gradientClipping: gradientClipping))
+        .toList();
     final isInput = json[_isInputField];
     final dropoutRate = json[_dropoutRateField] as double? ?? 0;
 

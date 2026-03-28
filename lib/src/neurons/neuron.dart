@@ -51,9 +51,6 @@ class Neuron {
 
   /// Keys used to identify this `Neuron` once parsed to [Map].
   static const _weightsField = 'weights';
-  static const _activationField = 'activation';
-  static const _learningRateField = 'learningRate';
-  static const _gradientClippingField = 'gradientClipping';
 
   /// Creates a `Neuron` with the specified `ActivationAlgorithm`, which is then
   /// resolved to an `ActivationFunction`.
@@ -164,24 +161,21 @@ class Neuron {
   double get output => weights.isEmpty ? inputs.first : activation(() => dot(inputs, weights));
 
   /// Create a `Neuron` from the it's JSON Model
-  factory Neuron.fromJson(Map<String, dynamic> json) {
-    final activationIndex = json[_activationField] as int;
+  factory Neuron.fromJson(Map<String, dynamic> json,
+      {required ActivationAlgorithm activation, required double learningRate, required double gradientClipping}) {
     final weights = List<double>.from(json[_weightsField] as List);
-    final gradientClipping = json[_gradientClippingField] as double?;
+
     return Neuron(
-        activationAlgorithm: ActivationAlgorithm.values[activationIndex],
-        learningRate: json[_learningRateField] as double,
+        activationAlgorithm: activation,
+        learningRate: learningRate,
         weights: weights,
         parentLayerSize: weights.length,
-        gradientClipping: gradientClipping ?? 0);
+        gradientClipping: gradientClipping);
   }
 
   /// Parse this `Neuron` to a JSON Model
   Map<String, dynamic> toJson() => <String, dynamic>{
         _weightsField: weights,
-        _activationField: activationAlgorithm.index,
-        _learningRateField: learningRate,
-        _gradientClippingField: gradientClipping ?? 0
       };
 
   Neuron copyWith(

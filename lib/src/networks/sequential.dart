@@ -30,7 +30,7 @@ class Sequential extends Network with Backpropagation {
     learningRate = data[_learningRateField];
     gradientClipping = (data[_gradientClippingField] as double? ?? 0.0);
     for (Map<String, dynamic> layer in data[_layersField]) {
-      layers.add(Layer.fromJson(layer));
+      layers.add(Layer.fromJson(layer, learningRate: learningRate, gradientClipping: gradientClipping));
     }
   }
 
